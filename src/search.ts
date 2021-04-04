@@ -7,7 +7,16 @@ export default class Task {
 
     public async fetchData() {
         this.users = await this.fetchUsers();
-        this.showUsers();
+        this.posts = await this.fetchPosts();
+        this.showPosts();
+    }
+
+    public showUsers(): void{
+        console.log(this.users);
+    }
+
+    public showPosts(): void{
+        console.log(this.posts);
     }
 
     private async fetchUsers(): Promise<dataI[]> {
@@ -15,7 +24,9 @@ export default class Task {
         return await user.json();
     }
 
-    public showUsers(): void{
-        console.log(this.users)
+    private async fetchPosts(): Promise<dataI[]> {
+        const post = await fetch('https://jsonplaceholder.typicode.com/posts');
+        return await post.json();
     }
+
 }
