@@ -1,0 +1,29 @@
+{
+  "name": "OpenX",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc & node .",
+    "dev": "tsc -w & nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dydek123/OpenX-Task.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dydek123/OpenX-Task/issues"
+  },
+  "homepage": "https://github.com/Dydek123/OpenX-Task#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/node-fetch": "^2.5.8",
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}
