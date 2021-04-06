@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import dataI from "./interfaces/dataI";
 import postI from "./interfaces/postI";
+import geolocationI from "./interfaces/geolocationI";
 
 export default class Task {
     private users : dataI[];
@@ -51,6 +52,65 @@ export default class Task {
         return repeatedList;
     }
 
+    public findClosestUser(users: dataI[]): string[]{
+        const userAmount:number = users.length;
+        let resultArray: string[] = [];
+        let distances: number[][] = this.prepareArray(userAmount);
+        for (let i = 0; i < userAmount; i++) {
+            let closestUser:string;
+            let minDistance:number;
+            if (i === 0) minDistance = this.calculateDistanceBetweenTwoPoints(users[0].address.geo, users[1].address.geo)
+            else {
+                const {minimumDistance, closestUserIndex} = this.findMinimumDistanceFromPreviouslyCalculated(distances, i, userAmount);
+                minDistance = minimumDistance;
+                closestUser = users[closestUserIndex].username;
+            }
+
+            for (let j = i+1; j < userAmount; j++) {
+                const distanceBetweenUsers = this.calculateDistanceBetweenTwoPoints(users[i].address.geo, users[j].address.geo)
+                distances[i].push(distanceBetweenUsers);
+                if (distanceBetweenUsers<minDistance) {
+                    minDistance = distanceBetweenUsers;
+                    closestUser = users[j].username;
+                }
+            }
+            resultArray.push(`Najbliżej użytkownika ${users[i].username} mieszka: ${closestUser}`);
+        }
+        return resultArray;
+    }
+
+    private findMinimumDistanceFromPreviouslyCalculated(distances: number[][], currentUser:number, userAmount:number) {
+        let minimumDistance:number = distances[0][currentUser-1] || undefined;
+        if (minimumDistance === undefined) return null;
+        let closestUserIndex:number = 0;
+        for (let i = 0; i < currentUser ; i++) {
+            const userDistance = distances[currentUser-1-i][i];
+            if (userDistance === undefined) break;
+            if (userDistance < minimumDistance) {
+                minimumDistance = userDistance;
+                closestUserIndex = currentUser-1-i;
+            }
+        }
+        return {minimumDistance, closestUserIndex};
+    }
+
+    private calculateDistanceBetweenTwoPoints(startPoint:geolocationI, endPoint: geolocationI) : number{
+        const toRadian = (angle:number) => (Math.PI / 180) * angle;
+        const distance = (a:number, b:number) => (Math.PI / 180) * (a - b);
+        const RadiusOfEarthInKm = 6371;
+
+        const dLatitude = distance(endPoint.lat, startPoint.lat);
+        const dLongitude = distance(endPoint.lng, startPoint.lng);
+
+        startPoint.lat = toRadian(startPoint.lat);
+        endPoint.lat = toRadian(endPoint.lat);
+
+        const a = Math.pow(Math.sin(dLatitude / 2), 2) +
+            Math.pow(Math.sin(dLongitude / 2), 2) * Math.cos(startPoint.lat) * Math.cos(endPoint.lat);
+        const c = 2 * Math.asin(Math.sqrt(a));
+        return RadiusOfEarthInKm * c;
+    }
+
     private userPostsAmount(user: dataI): number{
         if (user.posts === undefined) return 0;
         return user.posts.length
@@ -93,5 +153,13 @@ export default class Task {
                 break;
             }
         }
+    }
+
+    private prepareArray(userAmount: number):number[][] {
+        let newArray:number[][] = [];
+        for (let i = 0; i < userAmount; i++) {
+            newArray.push([])
+        }
+        return newArray;
     }
 }
