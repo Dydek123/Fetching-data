@@ -33,6 +33,24 @@ export default class Task {
         return countPosts;
     }
 
+    public repeatedTitles(users: dataI[]): string[]{
+        let uniqueList:string[] = [];
+        let repeatedList: string[] =[];
+        for (const user of users){
+            if (user.posts === undefined)
+                continue;
+            for (const post of user.posts){
+                const title = post.title;
+                if (uniqueList.includes(title)){
+                    repeatedList.push(title)
+                    continue;
+                }
+                uniqueList.push(title);
+            }
+        }
+        return repeatedList;
+    }
+
     private userPostsAmount(user: dataI): number{
         if (user.posts === undefined) return 0;
         return user.posts.length
@@ -51,6 +69,7 @@ export default class Task {
         }
         this.addPostsToUser(previousUserId, postsToAdd);
     }
+
 
     private async fetchUsers(): Promise<dataI[]> {
         const user = await fetch('https://jsonplaceholder.typicode.com/users');
