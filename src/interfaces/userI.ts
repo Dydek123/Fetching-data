@@ -2,7 +2,7 @@ import addressI from "./addressI";
 import companyI from "./companyI";
 import postI from "./postI";
 
-export default interface dataI {
+export default interface userI {
     id: number,
     name: string,
     username: string,
