@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import userI from "./interfaces/userI";
 import postI from "./interfaces/postI";
 import geolocationI from "./interfaces/geolocationI";
+import {FetchError} from "./exceptions/FetchError";
 
 export default class Task {
     private users: userI[];
@@ -10,17 +11,21 @@ export default class Task {
     public getUsers = (): userI[] => this.users;
 
     // Fetch users and posts from api's
-    public fetchData = async (): Promise<void> => {
-        const posts:postI[] = await this.fetchPosts();
-        this.users = await this.fetchUsers();
+    public fetchData = async (userApi: string, postsApi: string): Promise<void> => {
+        // let posts:postI[];
+        // posts = await this.fetchPosts(postsApi);
+        // this.users = await this.fetchUsers(userApi);
+        const posts: postI[] = await this.fetchPosts(postsApi);
+        this.users = await this.fetchUsers(userApi);
         this.connectPostsWithUsers(this.users, posts);
     };
 
     // Count how many posts each user has created
     public countUserPosts = (users: userI[]): string[] => {
+        this.checkParameters(users);
         let userPosts: string[] = [];
         for (const user of users) {
-            let countPosts:number = this.userPostsCount(user);
+            let countPosts: number = this.userPostsCount(user);
             userPosts.push(`${user.username} napisał(a) ${countPosts} postów`);
         }
         return userPosts;
@@ -28,13 +33,14 @@ export default class Task {
 
     // Return a list of titles that are not unique
     public repeatedTitles = (users: userI[]): string[] => {
+        this.checkParameters(users);
         let uniqueTitles: string[] = [];
         let repeatedListOfTitles: string[] = [];
         for (const user of users) {
             if (user.posts === undefined)
                 continue;
             for (const post of user.posts) {
-                const title:string = post.title;
+                const title: string = post.title;
                 if (uniqueTitles.includes(title)) {
                     repeatedListOfTitles.push(title)
                     continue;
@@ -47,30 +53,39 @@ export default class Task {
 
     // For each user, find another user who lives closest to him
     public findClosestUser = (users: userI[]): string[] => {
+        this.checkParameters(users);
+        if (users.length < 2) return [];
+
         const totalUsersNumber: number = users.length;
         let closestUsers: string[] = [];
         let distancesBetweenUsers: number[][] = this.prepareArray(totalUsersNumber);
+
         for (let i = 0; i < totalUsersNumber; i++) {
             let closestUser: string;
             let minimalDistanceBetweenUsers: number;
+
             if (i === 0) // For the first user, only calculate the distance to second user and set it as shortest distance
+            {
                 minimalDistanceBetweenUsers = this.calculateDistanceBetweenTwoUsers(users[0].address.geo, users[1].address.geo)
-            else { // To reduce the number of calculations, use the previously calculated distances
+                closestUser = users[i + 1].username;
+            } else { // To reduce the number of calculations, use the previously calculated distances
                 const {minimumDistance, closestUserIndex} = this.findMinimumDistanceFromPreviouslyCalculated(distancesBetweenUsers, i);
                 minimalDistanceBetweenUsers = minimumDistance;
                 closestUser = users[closestUserIndex].username;
             }
 
             for (let j = i + 1; j < totalUsersNumber; j++) {
-                const distanceBetweenUsers:number = this.calculateDistanceBetweenTwoUsers(users[i].address.geo, users[j].address.geo)
+                const distanceBetweenUsers: number = this.calculateDistanceBetweenTwoUsers(users[i].address.geo, users[j].address.geo)
                 distancesBetweenUsers[i].push(distanceBetweenUsers);
                 if (distanceBetweenUsers < minimalDistanceBetweenUsers) {
                     minimalDistanceBetweenUsers = distanceBetweenUsers;
                     closestUser = users[j].username;
                 }
             }
+
             closestUsers.push(`Najbliżej użytkownika ${users[i].username} mieszka: ${closestUser}`);
         }
+
         return closestUsers;
     };
 
@@ -93,30 +108,30 @@ export default class Task {
 
     // Calculate distance between users using Haversine formula
     private calculateDistanceBetweenTwoUsers = (startPoint: geolocationI, endPoint: geolocationI): number => {
-        const toRadian = (angle: number) :number => (Math.PI / 180) * angle;
-        const distance = (a: number, b: number):number => (Math.PI / 180) * (a - b);
-        const RadiusOfEarthInKm:number = 6371;
+        const toRadian = (angle: number): number => (Math.PI / 180) * angle;
+        const distance = (a: number, b: number): number => (Math.PI / 180) * (a - b);
+        const RadiusOfEarthInKm: number = 6371;
 
-        const dLatitude:number = distance(endPoint.lat, startPoint.lat);
-        const dLongitude:number = distance(endPoint.lng, startPoint.lng);
+        const dLatitude: number = distance(endPoint.lat, startPoint.lat);
+        const dLongitude: number = distance(endPoint.lng, startPoint.lng);
 
         startPoint.lat = toRadian(startPoint.lat);
         endPoint.lat = toRadian(endPoint.lat);
 
         //Haversine formula
-        const a:number = Math.pow(Math.sin(dLatitude / 2), 2) +
+        const a: number = Math.pow(Math.sin(dLatitude / 2), 2) +
             Math.pow(Math.sin(dLongitude / 2), 2) * Math.cos(startPoint.lat) * Math.cos(endPoint.lat);
-        const c:number = 2 * Math.asin(Math.sqrt(a));
+        const c: number = 2 * Math.asin(Math.sqrt(a));
         return RadiusOfEarthInKm * c;
     };
 
     // Count user posts
     private userPostsCount = (user: userI): number => {
-        return (user.posts === undefined)?0 : user.posts.length;
+        return (user.posts === undefined) ? 0 : user.posts.length;
     };
 
     // Add posts to users objects
-    private connectPostsWithUsers = (users: userI[], posts:postI[]): void => {
+    private connectPostsWithUsers = (users: userI[], posts: postI[]): void => {
         let postsToAdd: postI[] = [];
         let previousUserId: number = 0;
         for (const post of posts) {
@@ -131,19 +146,22 @@ export default class Task {
     };
 
     // Get users from API
-    private fetchUsers = async (): Promise<userI[]> => {
-        const user = await fetch('https://jsonplaceholder.typicode.com/users');
+    private fetchUsers = async (apiURL: string): Promise<userI[]> => {
+        const user = await fetch(apiURL);
         return await user.json();
     };
 
     // Get posts from API
-    private fetchPosts = async (): Promise<postI[]> => {
-        const post = await fetch('https://jsonplaceholder.typicode.com/posts');
-        return await post.json();
+    private fetchPosts = async (apiURL: string): Promise<postI[]> => {
+        const post = await fetch(apiURL);
+        if (!post.ok) {
+            throw new FetchError('Cannot get posts from API')
+        }
+        return post.json();
     };
 
     // Add all posts created by user to its object
-    private addPostsToUser = (users:userI[], userId: number, postsToAdd: postI[]): void => {
+    private addPostsToUser = (users: userI[], userId: number, postsToAdd: postI[]): void => {
         for (const user of users) {
             if (user.id === userId) {
                 if (user.posts === undefined) { // If user has any posts yet, create empty list
@@ -165,4 +183,9 @@ export default class Task {
         }
         return newArray;
     };
+
+    // If parameter is null or undefined throw error
+    private checkParameters(users: userI[]) {
+        if (users === undefined || users === null) throw new TypeError('Invalid data - users were not found.');
+    }
 }
