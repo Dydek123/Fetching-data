@@ -12,11 +12,10 @@ export default class Task {
 
     // Fetch users and posts from api's
     public fetchData = async (userApi: string, postsApi: string): Promise<void> => {
-        // let posts:postI[];
-        // posts = await this.fetchPosts(postsApi);
-        // this.users = await this.fetchUsers(userApi);
         const posts: postI[] = await this.fetchPosts(postsApi);
         this.users = await this.fetchUsers(userApi);
+        this.checkFetchedPosts(posts);
+        this.checkFetchedUsers(this.users);
         this.connectPostsWithUsers(this.users, posts);
     };
 
@@ -41,7 +40,7 @@ export default class Task {
                 continue;
             for (const post of user.posts) {
                 const title: string = post.title;
-                if (uniqueTitles.includes(title)) {
+                if (uniqueTitles.includes(title) && !repeatedListOfTitles.includes(title)) {
                     repeatedListOfTitles.push(title)
                     continue;
                 }
@@ -148,7 +147,10 @@ export default class Task {
     // Get users from API
     private fetchUsers = async (apiURL: string): Promise<userI[]> => {
         const user = await fetch(apiURL);
-        return await user.json();
+        if (!user.ok) {
+            throw new FetchError('Cannot get users from API')
+        }
+        return user.json();
     };
 
     // Get posts from API
@@ -187,5 +189,25 @@ export default class Task {
     // If parameter is null or undefined throw error
     private checkParameters(users: userI[]) {
         if (users === undefined || users === null) throw new TypeError('Invalid data - users were not found.');
+    }
+
+    // Check if fetched posts have all required fields. Lack of at least one field can mean that it is error in API url.
+    private checkFetchedPosts(posts: postI[]):boolean {
+        for (const post of posts) {
+            if (!(post && post.title && post.userId && post.body && post.id))
+                throw new FetchError('Posts fetched from the API do not meet the requirements')
+                return false
+        }
+        return true
+    }
+
+    // Check if fetched posts have all required fields. Lack of at least one field can mean that it is error in API url.
+    private checkFetchedUsers(users: userI[]):boolean {
+        for (const user of users) {
+            if (!(user && user.id && user.name && user.email && user.address && user.phone && user.website && user.company))
+                throw new FetchError('Users fetched from the API do not meet the requirements')
+            return false
+        }
+        return true
     }
 }
