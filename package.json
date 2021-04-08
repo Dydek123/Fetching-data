@@ -1,11 +1,11 @@
 {
-  "name": "OpenX",
+  "name": "openx",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc & node .",
-    "dev": "tsc -w & nodemon .",
+    "start": "tsc & node dist/index.js",
+    "dev": "tsc -w & nodemon dist/index.js",
     "test": "jest"
   },
   "repository": {
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/Dydek123/OpenX-Task.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Dawid Mazurkiewicz",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Dydek123/OpenX-Task/issues"
