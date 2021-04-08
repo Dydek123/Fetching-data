@@ -1,4 +1,4 @@
-import postI from "../../src/interfaces/postI";
+import postI from "../../interfaces/postI";
 
 const mockPosts:postI[] = [
     {

@@ -1,4 +1,4 @@
-import userI from "../../src/interfaces/userI";
+import userI from "../../interfaces/userI";
 
 const mockSingleUser:userI = {
     id: 1,

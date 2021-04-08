@@ -1,4 +1,4 @@
-import Task from "../../src/search";
+import Task from "../../search";
 import mockUsers from "../mocks/mockUsers"
 import mockPosts from "../mocks/mockPosts";
 import mockSinglePost from "../mocks/mockSinglePost";
