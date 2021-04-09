@@ -1,5 +1,5 @@
 # OpenX - recruitment task version 2
-The application gets posts and user data from a given API and then performs the appropriate [actions](#features).
+The application gets posts and user data from a given APIs ([users API](https://jsonplaceholder.typicode.com/users), [posts API](https://jsonplaceholder.typicode.com/posts)) and then performs the appropriate [actions](#features).
 
 ## Table of contents
 * [Technologies](#technologies)
@@ -7,8 +7,8 @@ The application gets posts and user data from a given API and then performs the 
 * [Features](#features)
 
 ## Technologies
-* TypeScript
-* Jest
+* TypeScript 4.2
+* Jest 26.6
 
 ## Setup
 Build program

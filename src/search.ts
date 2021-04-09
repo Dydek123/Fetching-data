@@ -14,14 +14,14 @@ export default class Task {
     public fetchData = async (userApi: string, postsApi: string): Promise<void> => {
         const posts: postI[] = await this.fetchPosts(postsApi); // Get posts
         this.users = await this.fetchUsers(userApi); // Get users
-        this.checkFetchedPosts(posts); // Check the correctness of the fetched posts
-        this.checkFetchedUsers(this.users); // Check the correctness of the fetched users
+        Task.checkFetchedPosts(posts); // Check the correctness of the fetched posts
+        Task.checkFetchedUsers(this.users); // Check the correctness of the fetched users
         this.connectPostsWithUsers(this.users, posts); // Add posts to users
     };
 
     // Count how many posts each user has created
     public countUsersPosts = (users: userI[]): string[] => {
-        this.checkParameters(users);
+        Task.checkParameters(users);
         let usersPosts: string[] = [];
         for (const user of users) {
             let postsCount: number = this.countSingleUserPosts(user); // Count posts for single user
@@ -32,7 +32,7 @@ export default class Task {
 
     // Return a list of titles that are not unique
     public repeatedTitles = (users: userI[]): string[] => {
-        this.checkParameters(users);
+        Task.checkParameters(users);
         let uniqueTitles: string[] = [];
         let repeatedListOfTitles: string[] = [];
         for (const user of users) {
@@ -42,7 +42,7 @@ export default class Task {
                 const title: string = post.title;
                 // Check if it exists in the unique list of titles, if so check if they exist in the repeating list of titles to avoid duplicates
                 if (uniqueTitles.includes(title) && !repeatedListOfTitles.includes(title)) {
-                    repeatedListOfTitles.push(title)
+                    repeatedListOfTitles.push(title);
                     continue;
                 }
                 uniqueTitles.push(title);
@@ -53,7 +53,7 @@ export default class Task {
 
     // For each user, find another user who lives closest to him
     public findClosestUser = (users: userI[]): string[] => {
-        this.checkParameters(users);
+        Task.checkParameters(users);
         if (users.length < 2) return []; // If there are less than 2 users, it cannot find another user
 
         const totalUsersNumber: number = users.length;
@@ -66,7 +66,7 @@ export default class Task {
 
             if (i === 0) // For the first user, only calculate the distance to second user and set it as shortest distance
             {
-                minimalDistanceBetweenUsers = this.calculateDistanceBetweenTwoUsers(users[0].address.geo, users[1].address.geo)
+                minimalDistanceBetweenUsers = this.calculateDistanceBetweenTwoUsers(users[0].address.geo, users[1].address.geo);
                 closestUser = users[i + 1].username;
             } else { // To reduce the number of calculations, use the previously calculated distances
                 const {minimumDistance, closestUserIndex} = this.findMinimumDistanceFromPreviouslyCalculated(distancesBetweenUsersMatrix, i);
@@ -149,7 +149,7 @@ export default class Task {
     private fetchUsers = async (apiURL: string): Promise<userI[]> => {
         const user = await fetch(apiURL);
         if (!user.ok) {
-            throw new FetchError('Cannot get users from API')
+            throw new FetchError('Cannot get users from API');
         }
         return user.json();
     };
@@ -158,7 +158,7 @@ export default class Task {
     private fetchPosts = async (apiURL: string): Promise<postI[]> => {
         const post = await fetch(apiURL);
         if (!post.ok) {
-            throw new FetchError('Cannot get posts from API')
+            throw new FetchError('Cannot get posts from API');
         }
         return post.json();
     };
@@ -182,18 +182,18 @@ export default class Task {
     private prepareArray = (userAmount: number): number[][] => {
         let newArray: number[][] = [];
         for (let i = 0; i < userAmount; i++) {
-            newArray.push([])
+            newArray.push([]);
         }
         return newArray;
     };
 
     // If parameter is null or undefined throw error
-    private checkParameters(users: userI[]) {
+    private static checkParameters(users: userI[]) {
         if (users === undefined || users === null) throw new TypeError('Invalid data - users were not found.');
     }
 
     // Check if fetched posts have all required fields. Lack of at least one field can mean that it is error in API url.
-    private checkFetchedPosts(posts: postI[]): void {
+    private static checkFetchedPosts(posts: postI[]): void {
         for (const post of posts) {
             if (!(post && post.title && post.userId && post.body && post.id))
                 throw new FetchError('Posts fetched from the API do not meet the requirements');
@@ -201,7 +201,7 @@ export default class Task {
     }
 
     // Check if fetched posts have all required fields. Lack of at least one field can mean that it is error in API url.
-    private checkFetchedUsers(users: userI[]): void {
+    private static checkFetchedUsers(users: userI[]): void {
         for (const user of users) {
             if (!(user && user.id && user.name && user.email && user.address && user.phone && user.website && user.company))
                 throw new FetchError('Users fetched from the API do not meet the requirements');
