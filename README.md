@@ -18,7 +18,7 @@ Build program
 
 Run program
 ```
- $ npm run 
+ $ npm start 
 ```
 
 Run tests
